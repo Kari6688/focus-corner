@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:">
+  <title>Focus Corner</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-view="collapsed" data-style="pill" data-timer="focus">
+
+  <!-- ===== Minimized: Pill ===== -->
+  <div id="pill" class="collapsed-view pill" role="button" tabindex="0" aria-label="Open to-do list">
+    <span class="grip" title="Drag to move" aria-hidden="true"></span>
+    <button class="ring-btn" id="pill-toggle" aria-label="Start timer">
+      <svg class="ring" viewBox="0 0 36 36" aria-hidden="true">
+        <circle class="ring-track" cx="18" cy="18" r="15"/>
+        <circle class="ring-fill" cx="18" cy="18" r="15"/>
+      </svg>
+      <svg class="ic ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
+      <svg class="ic ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>
+    </button>
+    <div class="pill-text">
+      <div class="pill-top" id="pill-top">0 to do</div>
+      <div class="pill-sub" id="pill-sub">Click to add a task</div>
+    </div>
+    <svg class="pill-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
+  </div>
+
+  <!-- ===== Minimized: Bubble ===== -->
+  <div id="bubble" class="collapsed-view bubble" role="button" tabindex="0" aria-label="Open to-do list">
+    <svg class="ring" viewBox="0 0 36 36" aria-hidden="true">
+      <circle class="ring-track" cx="18" cy="18" r="15"/>
+      <circle class="ring-fill" cx="18" cy="18" r="15"/>
+    </svg>
+    <div class="bubble-label"><span id="bubble-num">0</span><small id="bubble-unit">to do</small></div>
+  </div>
+
+  <!-- ===== Minimized: Edge tab ===== -->
+  <div id="tab" class="collapsed-view tab" role="button" tabindex="0" aria-label="Open to-do list">
+    <span class="tab-dot"></span>
+    <span class="tab-label" id="tab-label">0</span>
+    <span class="tab-bar"><span class="tab-bar-fill" id="tab-bar-fill"></span></span>
+  </div>
+
+  <!-- ===== Expanded panel ===== -->
+  <main id="panel" class="panel">
+    <header class="panel-head">
+      <div class="drag-area">
+        <span class="brand-dot"></span>
+        <span class="brand">Focus Corner</span>
+      </div>
+      <div class="head-actions">
+        <button class="icon-btn" id="btn-settings" title="Settings &amp; styles" aria-label="Settings">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-collapse" title="Minimize (Esc)" aria-label="Minimize">
+          <svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-hide" title="Hide" aria-label="Hide">
+          <svg viewBox="0 0 24 24"><path d="M9.9 4.2A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a13.2 13.2 0 0 1-1.7 2.7M6.6 6.6C3.9 8.4 2 12 2 12s3 8 10 8a9.7 9.7 0 0 0 5.4-1.6M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="timer">
+      <div class="modes" role="tablist" aria-label="Timer mode">
+        <button data-m="focus" role="tab">Focus</button>
+        <button data-m="short" role="tab">Short break</button>
+        <button data-m="long" role="tab">Long break</button>
+      </div>
+      <div class="clock" id="clock">25:00</div>
+      <div class="focus-on" id="focus-on"></div>
+      <div class="timer-controls">
+        <button class="ghost-btn" id="t-reset" title="Reset" aria-label="Reset">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+        <button class="primary-btn" id="t-toggle">Start</button>
+        <button class="ghost-btn" id="t-skip" title="Skip to next" aria-label="Skip">
+          <svg viewBox="0 0 24 24"><path d="M5 5v14l10-7zM19 5v14"/></svg>
+        </button>
+      </div>
+      <div class="sessions" id="sessions" aria-label="Focus sessions this cycle"></div>
+    </section>
+
+    <section class="tasks">
+      <form id="add-form" class="add-form" autocomplete="off">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <input id="add-input" placeholder="Add a task, press Enter" maxlength="200" aria-label="New task">
+      </form>
+      <ul id="list" class="list"></ul>
+      <div class="tasks-foot">
+        <span id="count"></span>
+        <button class="link-btn" id="clear-done">Clear completed</button>
+      </div>
+    </section>
+
+    <!-- Settings slide over the panel -->
+    <section id="settings" class="settings" aria-hidden="true">
+      <div class="settings-head">
+        <button class="icon-btn" id="settings-back" aria-label="Back">
+          <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <h2>Settings</h2>
+      </div>
+
+      <div class="settings-body">
+        <fieldset>
+          <legend>When minimized, show as</legend>
+          <div class="style-picker">
+            <label>
+              <input type="radio" name="collapsedStyle" value="pill">
+              <span class="opt"><span class="mini mini-pill"><i></i><b></b></span>Pill<small>Timer + next task</small></span>
+            </label>
+            <label>
+              <input type="radio" name="collapsedStyle" value="bubble">
+              <span class="opt"><span class="mini mini-bubble"></span>Bubble<small>Tiny progress ring</small></span>
+            </label>
+            <label>
+              <input type="radio" name="collapsedStyle" value="tab">
+              <span class="opt"><span class="mini mini-tab"></span>Edge tab<small>Tucked on the edge</small></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Timer (minutes)</legend>
+          <div class="num-grid">
+            <label>Focus<input type="number" data-setting="focus" min="1" max="180"></label>
+            <label>Short break<input type="number" data-setting="short" min="1" max="60"></label>
+            <label>Long break<input type="number" data-setting="long" min="1" max="90"></label>
+            <label>Long break every<input type="number" data-setting="longEvery" min="2" max="12"></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Behaviour</legend>
+          <label class="switch"><span>Minimize when I click elsewhere</span><input type="checkbox" data-setting="autoCollapse"></label>
+          <label class="switch"><span>Fade minimized widget until hovered</span><input type="checkbox" data-setting="fadeIdle"></label>
+          <label class="switch"><span>Keep above other windows</span><input type="checkbox" data-setting="alwaysOnTop"></label>
+          <label class="switch"><span>Start breaks automatically</span><input type="checkbox" data-setting="autoStartBreaks"></label>
+          <label class="switch"><span>Chime when a session ends</span><input type="checkbox" data-setting="sound"></label>
+          <label class="switch" id="login-row"><span>Open when my computer starts</span><input type="checkbox" id="launchAtLogin"></label>
+        </fieldset>
+
+        <p class="hint">Show or hide from anywhere with <span id="shortcut"></span>, or from the tray / menu-bar icon.</p>
+        <button class="danger-btn" id="quit">Quit Focus Corner</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
