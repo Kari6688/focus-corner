@@ -1,0 +1,75 @@
+# Builds Focus Corner for macOS, Windows and Linux and publishes the installers
+# to a GitHub Release. Runs when a version tag like v1.0.0 is pushed, or manually
+# from the Actions tab.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build installers
+        run: npx electron-builder --publish never
+        env:
+          # The app isn't code-signed yet; skip looking for signing certificates.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.os }}
+          path: |
+            dist/*.dmg
+            dist/*.exe
+            dist/*.AppImage
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('build-{0}', github.run_number) }}
+          name: Focus Corner ${{ github.ref_type == 'tag' && github.ref_name || format('build {0}', github.run_number) }}
+          files: installers/*
+          generate_release_notes: true
+          body: |
+            ## Download
+
+            | Your computer | File |
+            |---|---|
+            | Mac (Apple Silicon — M1/M2/M3/M4) | `FocusCorner-…-mac-arm64.dmg` |
+            | Mac (Intel) | `FocusCorner-…-mac-x64.dmg` |
+            | Windows | `FocusCorner-…-win-x64.exe` |
+            | Linux | `FocusCorner-…-linux-x86_64.AppImage` |
+
+            **First launch:** this build isn't code-signed yet.
+            - **Mac:** right-click the app → **Open** → **Open**.
+            - **Windows:** if SmartScreen appears, click **More info** → **Run anyway**.

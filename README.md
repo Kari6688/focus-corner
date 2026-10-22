@@ -6,7 +6,22 @@ Built with **Electron**, so the same code runs on macOS, Windows and Linux.
 
 ![Preview](preview.png)
 
-## Run it
+## Download
+
+Get the installer for your computer from the **[latest release](https://github.com/Kari6688/focus-corner/releases/latest)**: `.dmg` for Mac, `.exe` for Windows, `.AppImage` for Linux.
+
+## Release a new version
+
+Bump `"version"` in `package.json`, commit, then:
+
+```bash
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+GitHub Actions builds all three installers and publishes them as a new release (see `.github/workflows/release.yml`).
+
+## Run it from source
 
 You need [Node.js](https://nodejs.org) (the LTS version is fine).
 

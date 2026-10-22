@@ -31,22 +31,46 @@
       "output": "dist"
     },
     "mac": {
-      "target": "dmg",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
       "category": "public.app-category.productivity",
       "extendInfo": {
         "LSUIElement": true
       }
     },
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     },
     "linux": {
-      "target": "AppImage",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "category": "Utility"
-    }
-  }
+    },
+    "artifactName": "FocusCorner-${version}-${os}-${arch}.${ext}"
+  },
+  "repository": "https://github.com/Kari6688/focus-corner"
 }
