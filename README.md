@@ -12,14 +12,7 @@ Get the installer for your computer from the **[latest release](https://github.c
 
 ## Release a new version
 
-Bump `"version"` in `package.json`, commit, then:
-
-```bash
-git tag v1.0.1
-git push origin v1.0.1
-```
-
-GitHub Actions builds all three installers and publishes them as a new release (see `.github/workflows/release.yml`).
+Bump `"version"` in `package.json` (for example `1.0.0` → `1.0.1`), commit, and push to `main`. GitHub Actions builds all three installers and publishes them as release `v1.0.1` (see `.github/workflows/release.yml`). Pushes that don't change the version don't create a release.
 
 ## Run it from source
 
