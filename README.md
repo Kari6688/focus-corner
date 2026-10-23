@@ -34,7 +34,7 @@ npm run dist:linux   # → dist/Focus Corner-1.0.0.AppImage
 
 Build each on its own operating system. Install it like any other app, then turn on **Open when my computer starts** in Settings so it's always there.
 
-> **macOS note:** the app isn't code-signed, so the first time you open it, right-click the app → **Open** → **Open**. After that it opens normally.
+> **macOS note:** the app isn't signed with an Apple Developer ID yet. The first time you open it, macOS says it can't verify the app: click **Done**, then go to **System Settings → Privacy & Security** and click **Open Anyway**. After that it opens normally.
 
 ## How it works
 

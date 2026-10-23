@@ -97,6 +97,6 @@ jobs:
             | Windows | `FocusCorner-…-win-x64.exe` |
             | Linux | `FocusCorner-…-linux-x86_64.AppImage` |
 
-            **First launch:** this build isn't code-signed yet.
-            - **Mac:** right-click the app → **Open** → **Open**.
+            **First launch:** this build isn't signed with an Apple or Microsoft developer certificate yet, so your computer asks you to confirm once.
+            - **Mac:** drag Focus Corner to Applications and open it. When macOS says it can't verify the app, click **Done**, then go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to Focus Corner. (On older macOS: right-click the app → **Open** → **Open**.)
             - **Windows:** if SmartScreen appears, click **More info** → **Run anyway**.
