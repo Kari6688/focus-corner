@@ -10,6 +10,10 @@ contextBridge.exposeInMainWorld('focusCorner', {
   setLaunchAtLogin: (on) => ipcRenderer.send('launch-at-login', on),
   getLaunchAtLogin: () => ipcRenderer.invoke('get-launch-at-login'),
   reportStatus: (status) => ipcRenderer.send('status', status),
+  dragStart: () => ipcRenderer.send('drag-start'),
+  dragMove: (dx, dy) => ipcRenderer.send('drag-move', { dx, dy }),
+  dragEnd: () => ipcRenderer.send('drag-end'),
+  resetPosition: () => ipcRenderer.send('reset-position'),
   onCommand: (cb) => ipcRenderer.on('command', (_e, cmd) => cb(cmd)),
   onBlur: (cb) => ipcRenderer.on('blur', () => cb()),
 });

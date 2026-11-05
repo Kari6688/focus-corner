@@ -42,7 +42,7 @@ body[data-timer='long'] { --accent: var(--long); }
 html, body {
   margin: 0;
   height: 100%;
-  overflow: hidden;
+  overflow: clip; /* clip, not hidden: nothing can ever be scrolled sideways */
   background: transparent;
   color: var(--ink);
   font: 13px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
@@ -77,6 +77,9 @@ body[data-view='expanded'] #panel { display: flex; }
   animation: settle 0.18s ease-out;
 }
 .collapsed-view:active { transform: scale(0.98); }
+/* While being dragged around the screen */
+body.dragging .collapsed-view { cursor: grabbing; transform: scale(1.03); opacity: 1 !important; }
+body.dragging .collapsed-view * { cursor: grabbing; }
 body.fade-idle .collapsed-view:not(:hover):not(:focus-visible):not(.ding) { opacity: 0.55; }
 
 @keyframes settle { from { opacity: 0; transform: scale(0.94); } }
@@ -110,11 +113,9 @@ body.fade-idle .collapsed-view:not(:hover):not(:focus-visible):not(.ding) { opac
   padding: 0 14px 0 8px;
 }
 .grip {
-  -webkit-app-region: drag;
   width: 8px;
   height: 26px;
   margin-right: -4px;
-  cursor: grab;
   opacity: 0;
   transition: opacity 0.2s;
   background-image: radial-gradient(var(--faint) 1.2px, transparent 1.4px);
@@ -215,7 +216,8 @@ body.running .tab-dot { animation: breathe 2s ease-in-out infinite; }
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  overflow: hidden;
+  /* clip, not hidden: the off-screen settings sheet must never let the panel scroll sideways */
+  overflow: clip;
   transform-origin: top right;
   animation: pop 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
 }
@@ -522,6 +524,17 @@ kbd {
   background: var(--surface);
   color: var(--ink);
 }
+.secondary-btn {
+  width: 100%;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-weight: 600;
+}
+.secondary-btn:hover { background: var(--hover); }
+fieldset .hint { margin-bottom: 10px; }
+
 .danger-btn {
   width: 100%;
   height: 36px;

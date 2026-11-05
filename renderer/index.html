@@ -10,7 +10,7 @@
 
   <!-- ===== Minimized: Pill ===== -->
   <div id="pill" class="collapsed-view pill" role="button" tabindex="0" aria-label="Open to-do list">
-    <span class="grip" title="Drag to move" aria-hidden="true"></span>
+    <span class="grip" aria-hidden="true"></span>
     <button class="ring-btn" id="pill-toggle" aria-label="Start timer">
       <svg class="ring" viewBox="0 0 36 36" aria-hidden="true">
         <circle class="ring-track" cx="18" cy="18" r="15"/>
@@ -140,6 +140,12 @@
           <label class="switch"><span>Start breaks automatically</span><input type="checkbox" data-setting="autoStartBreaks"></label>
           <label class="switch"><span>Chime when a session ends</span><input type="checkbox" data-setting="sound"></label>
           <label class="switch" id="login-row"><span>Open when my computer starts</span><input type="checkbox" id="launchAtLogin"></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Position</legend>
+          <p class="hint">Drag the minimized widget anywhere on your screen, or drag this panel by its title bar. The edge tab slides up and down the right edge.</p>
+          <button class="secondary-btn" id="reset-pos">Move back to top-right corner</button>
         </fieldset>
 
         <p class="hint">Show or hide from anywhere with <span id="shortcut"></span>, or from the tray / menu-bar icon.</p>

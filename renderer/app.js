@@ -5,6 +5,7 @@
 const api = window.focusCorner || {
   platform: 'browser',
   setMode() {}, hide() {}, quit() {}, setAlwaysOnTop() {}, setLaunchAtLogin() {},
+  dragStart() {}, dragMove() {}, dragEnd() {}, resetPosition() {},
   getLaunchAtLogin: async () => false, reportStatus() {}, onCommand() {}, onBlur() {},
 };
 
@@ -326,7 +327,9 @@ function renderTimerControls() {
     bold.textContent = active.text;
     focusOn.append(bold);
   } else {
-    focusOn.textContent = todos.some((t) => !t.done) ? 'Tip: press ▶ on a task to focus on it' : 'Add a task below, then press Start';
+    const hasTasks = todos.some((t) => !t.done);
+    if (timer.running) focusOn.textContent = hasTasks ? 'Press ▶ on a task to track time on it' : 'Focusing — add what you’re working on below';
+    else focusOn.textContent = hasTasks ? 'Tip: press ▶ on a task to focus on it' : 'Add a task below, then press Start';
   }
 }
 
@@ -441,9 +444,47 @@ function renderTime() {
 
 /* ---------------- events ---------------- */
 
+// The minimized widget can be dragged anywhere on screen. A press that moves less
+// than a few pixels still counts as a click and opens the panel.
+const DRAG_THRESHOLD = 4;
+let drag = null;
+
 for (const id of ['pill', 'bubble', 'tab']) {
   const el = document.getElementById(id);
-  el.addEventListener('click', (e) => { if (!e.target.closest('.ring-btn')) expand(); });
+
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || e.target.closest('.ring-btn')) return;
+    drag = { x: e.screenX, y: e.screenY, moved: false, id: e.pointerId };
+    el.setPointerCapture(e.pointerId);
+  });
+
+  el.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.screenX - drag.x;
+    const dy = e.screenY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+    if (!drag.moved) {
+      drag.moved = true;
+      document.body.classList.add('dragging');
+      api.dragStart();
+    }
+    api.dragMove(dx, dy);
+  });
+
+  const endDrag = (e, cancelled) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const { moved } = drag;
+    drag = null;
+    if (moved) {
+      document.body.classList.remove('dragging');
+      api.dragEnd();
+    } else if (!cancelled) {
+      expand();
+    }
+  };
+  el.addEventListener('pointerup', (e) => endDrag(e, false));
+  el.addEventListener('pointercancel', (e) => endDrag(e, true));
+
   el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); expand(); } });
 }
 $('#pill-toggle').addEventListener('click', (e) => { e.stopPropagation(); toggleTimer(); });
@@ -453,6 +494,10 @@ $('#btn-hide').addEventListener('click', hideWidget);
 $('#btn-settings').addEventListener('click', openSettings);
 $('#settings-back').addEventListener('click', closeSettings);
 $('#quit').addEventListener('click', () => api.quit());
+$('#reset-pos').addEventListener('click', () => api.resetPosition());
+
+// Safety net: the panel should never be scrolled sideways.
+$('#panel').addEventListener('scroll', (e) => { e.currentTarget.scrollLeft = 0; e.currentTarget.scrollTop = 0; });
 
 $('#t-toggle').addEventListener('click', toggleTimer);
 $('#t-reset').addEventListener('click', resetTimer);

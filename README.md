@@ -65,7 +65,8 @@ Build each on its own operating system. Install it like any other app, then turn
 
 - Press **▶** on a task to start a focus session on it. Each finished session adds a dot count next to that task, so you can see how long things really took.
 - Double-click a task to edit it. Completed tasks drop to the bottom; **Clear completed** removes them.
-- The widget remembers your tasks, timer and position between launches. Drag it by the grip on the pill or the panel's title bar, and it will stay where you put it ("Move back to top-right corner" in the tray menu resets it).
+- **Move it anywhere:** drag the minimized widget (pill, bubble or tab) wherever you like, or drag the open panel by its title bar. It remembers the spot. **Settings → Move back to top-right corner** (or the tray menu) puts it back.
+- The widget remembers your tasks, timer and position between launches.
 - On a Mac, the countdown also shows in the menu bar while a session runs.
 
 ## Project layout

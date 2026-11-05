@@ -119,7 +119,7 @@ function createWindow() {
 
   // Remember where the person drags the widget (ignoring our own resizes).
   win.on('move', () => {
-    if (programmaticMove || mode === 'tab') return;
+    if (programmaticMove || dragOrigin || mode === 'tab') return;
     clearTimeout(moveTimer);
     moveTimer = setTimeout(() => {
       if (programmaticMove || !win) return;
@@ -178,15 +178,7 @@ function refreshTray() {
     { label: 'Open to-do list', click: () => showWidget({ expand: true }) },
     { label: status.running ? 'Pause timer' : 'Start timer', click: () => send('command', 'toggle-timer') },
     { type: 'separator' },
-    {
-      label: 'Move back to top-right corner',
-      click: () => {
-        anchor = defaultAnchor();
-        saveAnchor();
-        applyBounds();
-        showWidget();
-      },
-    },
+    { label: 'Move back to top-right corner', click: resetPosition },
   ];
   if (process.platform !== 'linux') {
     items.push({
@@ -219,6 +211,51 @@ ipcMain.on('set-mode', (_e, next) => {
     win.focus(); // so you can type a task straight away
   }
 });
+
+/* ---------- dragging the minimized widget ---------- */
+
+let dragOrigin = null; // window position when the drag started
+
+ipcMain.on('drag-start', () => {
+  if (!win) return;
+  const [x, y] = win.getPosition();
+  dragOrigin = { x, y };
+});
+
+ipcMain.on('drag-move', (_e, { dx, dy }) => {
+  if (!win || !dragOrigin) return;
+  const size = SIZES[mode] || SIZES.pill;
+  const wa = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
+  // The edge tab only slides up and down; everything else moves freely.
+  let x = mode === 'tab' ? wa.x + wa.width - size.width : dragOrigin.x + dx;
+  let y = dragOrigin.y + dy;
+  x = Math.min(Math.max(x, wa.x), wa.x + wa.width - size.width);
+  y = Math.min(Math.max(y, wa.y), wa.y + wa.height - size.height);
+  programmaticMove = true;
+  win.setPosition(Math.round(x), Math.round(y));
+});
+
+ipcMain.on('drag-end', () => {
+  if (!win || !dragOrigin) return;
+  dragOrigin = null;
+  const b = win.getBounds();
+  if (mode === 'tab') {
+    const wa = screen.getDisplayMatching(b).workArea;
+    anchor = { right: wa.x + wa.width - EDGE_GAP, top: b.y };
+  } else {
+    anchor = { right: b.x + b.width, top: b.y };
+  }
+  saveAnchor();
+  applyBounds();
+});
+
+function resetPosition() {
+  anchor = defaultAnchor();
+  saveAnchor();
+  applyBounds();
+  showWidget();
+}
+ipcMain.on('reset-position', resetPosition);
 
 ipcMain.on('hide', hideWidget);
 ipcMain.on('quit', () => app.quit());
