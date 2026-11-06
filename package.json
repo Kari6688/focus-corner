@@ -1,7 +1,7 @@
 {
   "name": "focus-corner",
   "productName": "Focus Corner",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A floating to-do list and Pomodoro timer that lives in the corner of your screen.",
   "main": "main.js",
   "author": "Karima Afghoul",

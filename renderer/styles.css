@@ -50,6 +50,8 @@ body { padding: 8px; }
 body[data-view='collapsed'][data-style='tab'] { padding: 8px 0 8px 8px; }
 
 button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+/* Safety net: anything clickable is never part of a window-drag region. */
+button, input, label, [role='button'] { -webkit-app-region: no-drag; }
 button:focus-visible, [role='button']:focus-visible, input:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
@@ -228,7 +230,8 @@ body.running .tab-dot { animation: breathe 2s ease-in-out infinite; }
   cursor: grab;
 }
 .date { color: var(--muted); font-size: 12.5px; letter-spacing: 0.01em; }
-.head-actions { position: relative; display: flex; gap: 0; }
+/* The drag area spans the whole header, so the buttons must opt out or macOS swallows their clicks. */
+.head-actions { position: relative; display: flex; gap: 0; -webkit-app-region: no-drag; }
 
 .icon-btn {
   width: 28px; height: 28px;
