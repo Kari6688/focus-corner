@@ -46,8 +46,7 @@
   <main id="panel" class="panel">
     <header class="panel-head">
       <div class="drag-area">
-        <span class="brand-dot"></span>
-        <span class="brand">Focus Corner</span>
+        <span class="date" id="today"></span>
       </div>
       <div class="head-actions">
         <button class="icon-btn" id="btn-settings" title="Settings &amp; styles" aria-label="Settings">
@@ -62,6 +61,7 @@
       </div>
     </header>
 
+    <div class="card">
     <section class="timer">
       <div class="modes" role="tablist" aria-label="Timer mode">
         <button data-m="focus" role="tab">Focus</button>
@@ -79,7 +79,18 @@
           <svg viewBox="0 0 24 24"><path d="M5 5v14l10-7zM19 5v14"/></svg>
         </button>
       </div>
-      <div class="sessions" id="sessions" aria-label="Focus sessions this cycle"></div>
+      <div class="plan">
+        <button class="plan-btn" id="plan-dec" title="Fewer sessions" aria-label="Fewer sessions in a row">
+          <svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg>
+        </button>
+        <div class="plan-mid">
+          <div class="plan-label" id="plan-label">1 × 25 min</div>
+          <div class="sessions" id="sessions" aria-hidden="true"></div>
+        </div>
+        <button class="plan-btn" id="plan-inc" title="More sessions" aria-label="More sessions in a row">
+          <svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg>
+        </button>
+      </div>
     </section>
 
     <section class="tasks">
@@ -93,6 +104,7 @@
         <button class="link-btn" id="clear-done">Clear completed</button>
       </div>
     </section>
+    </div>
 
     <!-- Settings slide over the panel -->
     <section id="settings" class="settings" aria-hidden="true">
@@ -137,7 +149,7 @@
           <label class="switch"><span>Minimize when I click elsewhere</span><input type="checkbox" data-setting="autoCollapse"></label>
           <label class="switch"><span>Fade minimized widget until hovered</span><input type="checkbox" data-setting="fadeIdle"></label>
           <label class="switch"><span>Keep above other windows</span><input type="checkbox" data-setting="alwaysOnTop"></label>
-          <label class="switch"><span>Start breaks automatically</span><input type="checkbox" data-setting="autoStartBreaks"></label>
+          <label class="switch"><span>Start breaks automatically<small>Sets of 2+ sessions always do</small></span><input type="checkbox" data-setting="autoStartBreaks"></label>
           <label class="switch"><span>Chime when a session ends</span><input type="checkbox" data-setting="sound"></label>
           <label class="switch" id="login-row"><span>Open when my computer starts</span><input type="checkbox" id="launchAtLogin"></label>
         </fieldset>

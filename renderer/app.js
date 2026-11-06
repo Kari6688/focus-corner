@@ -39,7 +39,9 @@ const DEFAULTS = {
   alwaysOnTop: true,
   autoStartBreaks: false,
   sound: true,
+  planTotal: 1, // focus sessions to run in a row; above 1, breaks and sessions chain automatically
 };
+const PLAN_MAX = 12;
 const MODE_LABEL = { focus: 'Focus', short: 'Short break', long: 'Long break' };
 const RING_C = 2 * Math.PI * 15;
 
@@ -47,6 +49,7 @@ let settings = { ...DEFAULTS, ...store.get('fc.settings', {}) };
 let todos = store.get('fc.todos', []);
 let timer = {
   mode: 'focus', running: false, endAt: null, remaining: null, completedFocus: 0, activeTaskId: null,
+  planDone: 0, // focus sessions finished in the current set
   ...store.get('fc.timer', {}),
 };
 if (typeof timer.remaining !== 'number') timer.remaining = durationOf(timer.mode);
@@ -68,8 +71,22 @@ function fmt(ms) {
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 
+/* Session sets: run several focus sessions in a row. */
+const planActive = () => settings.planTotal > 1;
+const planComplete = () => planActive() && timer.planDone >= settings.planTotal;
+// True between sessions of a set that's under way: the next session should start on its own.
+const planInProgress = () => planActive() && timer.planDone > 0 && timer.planDone < settings.planTotal;
+
+function changePlan(delta) {
+  settings.planTotal = Math.min(PLAN_MAX, Math.max(1, settings.planTotal + delta));
+  saveSettings();
+  render();
+}
+
 function start() {
   if (timer.running) return;
+  // Starting a focus session after a finished set begins a new set.
+  if (timer.mode === 'focus' && planComplete()) timer.planDone = 0;
   if (timer.remaining <= 0) timer.remaining = durationOf(timer.mode);
   timer.running = true;
   timer.endAt = Date.now() + timer.remaining;
@@ -106,14 +123,28 @@ function nextModeAfter(finished, counted) {
   return counted && timer.completedFocus % settings.longEvery === 0 ? 'long' : 'short';
 }
 
+// Reset button: resets the countdown; pressed again on a fresh timer, it also restarts the set.
+function resetButton() {
+  if (isFresh()) timer.planDone = 0;
+  resetTimer();
+}
+
 function skip() {
+  // Skipping a break in the middle of a set goes straight into the next session.
+  const continueSet = timer.mode !== 'focus' && planInProgress();
   setTimerMode(nextModeAfter(timer.mode, false));
+  if (continueSet) start();
 }
 
 function complete({ quiet = false } = {}) {
   const finished = timer.mode;
+  let setFinished = false;
   if (finished === 'focus') {
     timer.completedFocus += 1;
+    if (planActive()) {
+      timer.planDone += 1;
+      setFinished = timer.planDone >= settings.planTotal;
+    }
     const task = todos.find((t) => t.id === timer.activeTaskId);
     if (task) { task.poms = (task.poms || 0) + 1; saveTodos(); }
   }
@@ -124,8 +155,11 @@ function complete({ quiet = false } = {}) {
   timer.remaining = durationOf(next);
   saveTimer();
   if (!quiet) {
-    announce(finished, next);
-    if (finished === 'focus' && settings.autoStartBreaks) start();
+    announce(finished, next, setFinished);
+    // In a set, breaks and the next session start by themselves; the set stops after its last session.
+    const autoBreak = finished === 'focus' && !setFinished && (planActive() || settings.autoStartBreaks);
+    const autoFocus = finished !== 'focus' && planInProgress();
+    if (autoBreak || autoFocus) start();
   }
   render();
 }
@@ -152,12 +186,29 @@ function chime() {
   } catch { /* audio unavailable */ }
 }
 
-function announce(finished, next) {
+function announce(finished, next, setFinished) {
   if (settings.sound) chime();
-  const title = finished === 'focus' ? 'Focus session complete' : 'Break is over';
-  const body = finished === 'focus'
-    ? `Nice work. Time for a ${settings[next]}-minute ${next === 'long' ? 'long ' : ''}break.`
-    : 'Ready for the next focus session?';
+  const n = timer.planDone;
+  const total = settings.planTotal;
+  const breakText = `${settings[next]}-minute ${next === 'long' ? 'long ' : ''}break`;
+  let title;
+  let body;
+  if (finished === 'focus' && setFinished) {
+    title = `All ${total} sessions done 🎉`;
+    body = 'Great work. Take a proper break.';
+  } else if (finished === 'focus' && planActive()) {
+    title = `Session ${n} of ${total} done`;
+    body = `Time for a ${breakText}. Session ${n + 1} starts automatically after it.`;
+  } else if (finished === 'focus') {
+    title = 'Focus session complete';
+    body = `Nice work. Time for a ${breakText}.`;
+  } else if (planInProgress()) {
+    title = 'Break’s over';
+    body = `Session ${n + 1} of ${total} is starting now.`;
+  } else {
+    title = 'Break is over';
+    body = 'Ready for the next focus session?';
+  }
   try { new Notification(title, { body, silent: true }); } catch { /* notifications blocked */ }
   $$('.collapsed-view').forEach((el) => {
     el.classList.remove('ding');
@@ -301,34 +352,74 @@ function render() {
   renderTime();
 }
 
+// "November 05, Thursday"
+function todayLabel() {
+  const d = new Date();
+  const month = d.toLocaleDateString(undefined, { month: 'long' });
+  const weekday = d.toLocaleDateString(undefined, { weekday: 'long' });
+  return `${month} ${String(d.getDate()).padStart(2, '0')}, ${weekday}`;
+}
+
+// "Focus 2/4" during a set, otherwise just the mode name.
+function modeLabel() {
+  if (timer.mode === 'focus' && planActive() && !planComplete()) {
+    return `Focus ${Math.min(timer.planDone + 1, settings.planTotal)}/${settings.planTotal}`;
+  }
+  return MODE_LABEL[timer.mode];
+}
+
 function renderTimerControls() {
   for (const btn of $$('.modes button')) btn.setAttribute('aria-selected', String(btn.dataset.m === timer.mode));
   $('#t-toggle').textContent = timer.running ? 'Pause' : isFresh() ? 'Start' : 'Resume';
   $('#pill-toggle').setAttribute('aria-label', timer.running ? 'Pause timer' : 'Start timer');
 
+  // Session set: "4 × 25 min" with one dot per session (filled = done, pulsing = in progress).
+  const total = settings.planTotal;
+  const done = Math.min(timer.planDone, total);
+  $('#plan-label').textContent = `${total} × ${settings.focus} min`;
+  $('#plan-label').title = total > 1 ? `${total} focus sessions in a row` : 'One session at a time';
+  $('#plan-dec').disabled = total <= 1;
+  $('#plan-inc').disabled = total >= PLAN_MAX;
+
   const dots = $('#sessions');
   dots.textContent = '';
-  const inCycle = timer.completedFocus % settings.longEvery;
-  const filled = inCycle === 0 && timer.completedFocus > 0 && timer.mode === 'long' ? settings.longEvery : inCycle;
-  for (let i = 0; i < settings.longEvery; i++) {
-    const dot = document.createElement('i');
-    if (i < filled) dot.className = 'on';
-    dots.append(dot);
+  if (planActive()) {
+    for (let i = 0; i < total; i++) {
+      const dot = document.createElement('i');
+      if (i < done) dot.className = 'on';
+      else if (i === done && timer.mode === 'focus' && !isFresh()) dot.className = 'now';
+      dots.append(dot);
+    }
+  } else {
+    const inCycle = timer.completedFocus % settings.longEvery;
+    const filled = inCycle === 0 && timer.completedFocus > 0 && timer.mode === 'long' ? settings.longEvery : inCycle;
+    for (let i = 0; i < settings.longEvery; i++) {
+      const dot = document.createElement('i');
+      if (i < filled) dot.className = 'on';
+      dots.append(dot);
+    }
   }
 
   const focusOn = $('#focus-on');
   const active = todos.find((t) => t.id === timer.activeTaskId && !t.done);
   focusOn.textContent = '';
+  const setPrefix = planActive() && !planComplete() ? `Session ${done + 1} of ${total} · ` : '';
   if (timer.mode !== 'focus') {
-    focusOn.textContent = timer.mode === 'long' ? 'Long break — stretch, walk, hydrate.' : 'Short break — look away from the screen.';
+    if (planComplete()) focusOn.textContent = `All ${total} sessions done 🎉 Enjoy the break.`;
+    else if (planInProgress()) focusOn.textContent = `Break · session ${done + 1} of ${total} starts automatically`;
+    else focusOn.textContent = timer.mode === 'long' ? 'Long break — stretch, walk, hydrate.' : 'Short break — look away from the screen.';
+  } else if (planComplete() && !timer.running) {
+    focusOn.textContent = `All ${total} sessions done · Start begins a new set`;
   } else if (active) {
-    focusOn.append('Working on ');
+    focusOn.append(setPrefix + 'Working on ');
     const bold = document.createElement('b');
     bold.textContent = active.text;
     focusOn.append(bold);
   } else {
     const hasTasks = todos.some((t) => !t.done);
-    if (timer.running) focusOn.textContent = hasTasks ? 'Press ▶ on a task to track time on it' : 'Focusing — add what you’re working on below';
+    if (setPrefix && timer.running) focusOn.textContent = setPrefix + 'Focusing';
+    else if (setPrefix) focusOn.textContent = setPrefix + 'press Start to begin';
+    else if (timer.running) focusOn.textContent = hasTasks ? 'Press ▶ on a task to track time on it' : 'Focusing — add what you’re working on below';
     else focusOn.textContent = hasTasks ? 'Tip: press ▶ on a task to focus on it' : 'Add a task below, then press Start';
   }
 }
@@ -410,6 +501,8 @@ function renderTime() {
   const task = nextTask();
 
   $('#clock').textContent = label;
+  const today = todayLabel();
+  if ($('#today').textContent !== today) $('#today').textContent = today;
   for (const ring of $$('.ring-fill')) ring.style.strokeDashoffset = String(RING_C * (1 - progress));
   document.title = timer.running ? `${label} · Focus Corner` : 'Focus Corner';
 
@@ -422,7 +515,7 @@ function renderTime() {
     top.append(label + ' ');
     const m = document.createElement('span');
     m.className = 'mode';
-    m.textContent = timer.running ? `· ${MODE_LABEL[timer.mode]}` : '· Paused';
+    m.textContent = timer.running ? `· ${modeLabel()}` : '· Paused';
     top.append(m);
   }
   $('#pill-sub').textContent = task ? task.text : todos.length ? 'Everything is done — nice!' : 'Click to add a task';
@@ -437,7 +530,7 @@ function renderTime() {
   $('#tab-bar-fill').style.height = `${Math.round(progress * 100)}%`;
 
   // Tray / menu bar
-  const status = { running: timer.running, label, modeLabel: MODE_LABEL[timer.mode] };
+  const status = { running: timer.running, label, modeLabel: modeLabel() };
   const key = JSON.stringify(status);
   if (key !== lastStatusKey) { lastStatusKey = key; api.reportStatus(status); }
 }
@@ -500,7 +593,9 @@ $('#reset-pos').addEventListener('click', () => api.resetPosition());
 $('#panel').addEventListener('scroll', (e) => { e.currentTarget.scrollLeft = 0; e.currentTarget.scrollTop = 0; });
 
 $('#t-toggle').addEventListener('click', toggleTimer);
-$('#t-reset').addEventListener('click', resetTimer);
+$('#t-reset').addEventListener('click', resetButton);
+$('#plan-dec').addEventListener('click', () => changePlan(-1));
+$('#plan-inc').addEventListener('click', () => changePlan(1));
 $('#t-skip').addEventListener('click', skip);
 $$('.modes button').forEach((btn) => btn.addEventListener('click', () => setTimerMode(btn.dataset.m)));
 

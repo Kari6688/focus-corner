@@ -61,6 +61,10 @@ Build each on its own operating system. Install it like any other app, then turn
 - Chime when a session ends
 - Custom focus / break lengths and how often the long break comes
 
+### Sessions in a row
+
+Under the timer, use **−** / **+** to choose how many focus sessions to run back to back (for example **4 × 25 min**). Press Start once: each break starts by itself when a session ends, and the next session starts by itself when the break ends, until the set is done. The dots show your progress, and the pill shows e.g. `Focus 2/4`. Skipping a break mid-set jumps straight into the next session; pressing reset twice starts the set over. Set it back to **1** for one session at a time.
+
 ### Tasks + timer together
 
 - Press **▶** on a task to start a focus session on it. Each finished session adds a dot count next to that task, so you can see how long things really took.
